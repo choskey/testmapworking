@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<head>
+    <style>
+          #button {
+              align: center;
+              font-size: 20px;
+          }
+    </style>
+</head>
+<body>
+<!--<script src="https://d3js.org/d3.v3.min.js"></script>-->
+<script type="text/javascript" src="https://d3js.org/d3.v3.min.js"></script>
+<script type="text/javascript" src="https://d3js.org/queue.v1.min.js"></script>
+<script type="text/javascript" src="https://d3js.org/topojson.v1.min.js"></script>
+<script type="text/javascript" src="https://agiledragonconsulting.com/js/svg-pan-zoom.js"></script>
+<div id="button">
+    <a href="#" onclick="changeColor(); return false;">Change color</a>&nbsp;&nbsp;<a href="#" onclick="getZipZoom(); return false;">Get zoom</a>
+</div>
+<script>
+    var buttonheightceil = Math.ceil(document.getElementById("button").getBoundingClientRect().height);
+
+    var width = document.documentElement.clientWidth - 8;
+    var height = document.documentElement.clientHeight - buttonheightceil - 20;
+    console.log("width = "+width+", height = "+height);
+    var path = d3.geo.path();
+
+    var svg = d3.select("body").append("svg")
+        .attr("id","map")
+        .attr("width", width)
+        .attr("height", height);
+
+    queue()
+        .defer(d3.json, "https://s3.us-east-2.amazonaws.com/agiledragon/zips_us_topo.json")
+        .await(ready);
+
+    function ready(error, us) {
+        svg.append("g")
+            .attr("class", "counties")
+            .selectAll("path")
+            .data(topojson.feature(us, us.objects.zip_codes_for_the_usa).features)
+            .enter().append("path")
+            .attr("class", "zip")
+            .attr("id", function(d) {return d.properties.zip; })
+            .attr("data-zip", function(d) {return d.properties.zip; })
+            .attr("data-state", function(d) {return d.properties.state; })
+            .attr("data-name", function(d) {return d.properties.name; })
+            .attr("stroke","#383838")
+            .attr("stroke-width",".1px")
+            .attr("fill","none")
+            .attr("d", path)
+
+        var panZoom = svgPanZoom('#map', {
+            zoomEnabled: true,
+            controlIconsEnabled: true,
+            minZoom: 0.1,
+            maxZoom: 100,
+            fit: true,
+            contain: true,
+            center: true
+        });
+    }
+    function getZipZoom() {
+        var panZoom = svgPanZoom('#map');
+        var thisZoom = panZoom.getZoom();
+        console.log("");
+        console.log(thisZoom);
+    }
+    function changeColor() {
+        var thisZip = "00014";
+        var x = document.getElementsByClassName("zip");
+        console.log("");
+        console.log("setting color.  x.length = "+x.length);
+        for (let i = 0; i < x.length; i++) {
+            if(x[i].getAttribute("id")===thisZip){
+                x[i].setAttribute("stroke","#ff0000");
+                x[i].parentElement.appendChild(x[i]);
+                break;
+            }
+        }
+    }
+</script>
+</body>
+</html>
